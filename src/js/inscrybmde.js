@@ -40,6 +40,7 @@ var bindings = {
     'undo': undo,
     'redo': redo,
     'toggleSideBySide': toggleSideBySide,
+    'toggleSyncSideBySidePreviewScroll': toggleSyncSideBySidePreviewScroll,
     'toggleFullScreen': toggleFullScreen
 };
 
@@ -57,6 +58,7 @@ var shortcuts = {
     'toggleCodeBlock': 'Cmd-Alt-C',
     'togglePreview': 'Cmd-P',
     'toggleSideBySide': 'F9',
+    'toggleSyncSideBySidePreviewScroll': 'Cmd-Alt-F9',
     'toggleFullScreen': 'F11'
 };
 
@@ -1257,6 +1259,15 @@ var toolbarBuiltInButtons = {
         title: 'Toggle Side by Side',
         default: true
     },
+    'sync-side-by-side': {
+        name: 'sync-side-by-side',
+        action: toggleSyncSideBySidePreviewScroll,
+        className: 'fas fa-exchange-alt',
+        noDisable: true,
+        noMobile: true,
+        title: 'Toggle Side by Side Preview Scroll Synchronization',
+        default: true
+    },
     'fullscreen': {
         name: 'fullscreen',
         action: toggleFullScreen,
@@ -1426,6 +1437,15 @@ function InscrybMDE(options) {
     // Change unique_id to uniqueId for backwards compatibility
     if (options.autosave != undefined && options.autosave.unique_id != undefined && options.autosave.unique_id != '')
         options.autosave.uniqueId = options.autosave.unique_id;
+
+
+    // SideBySide Preview Srcroll Synchronization
+    if (options.syncSideBySidePreviewScroll === undefined) {
+        options.syncSideBySidePreviewScroll = true;
+    }
+    this.syncSideBySidePreviewScroll = false;
+    this.cScroll = false;
+    this.pScroll = false;
 
 
     // Update this options
@@ -1679,6 +1699,25 @@ InscrybMDE.prototype.clearAutosavedValue = function () {
     }
 };
 
+function toggleSyncSideBySidePreviewScroll(editor) {
+    var cm = editor.codemirror;
+    var wrapper = cm.getWrapperElement();
+    var preview = wrapper.nextSibling;
+    var toolbarButton = editor.toolbarElements['sync-side-by-side'];
+
+    if (editor.syncSideBySidePreviewScroll) {
+        cm.off('scroll', editor.func_e2p);
+        preview.onscroll = null;
+        toolbarButton.className = toolbarButton.className.replace(/\s*active\s*/g, '');
+        editor.syncSideBySidePreviewScroll = false;
+    } else {
+        cm.on('scroll', editor.func_e2p);
+        preview.onscroll = editor.func_p2e;
+        toolbarButton.className += ' active';
+        editor.syncSideBySidePreviewScroll = true;
+    }
+}
+
 InscrybMDE.prototype.createSideBySide = function () {
     var cm = this.codemirror;
     var wrapper = cm.getWrapperElement();
@@ -1690,34 +1729,13 @@ InscrybMDE.prototype.createSideBySide = function () {
         wrapper.parentNode.insertBefore(preview, wrapper.nextSibling);
     }
 
-    if (this.options.syncSideBySidePreviewScroll === false) return preview;
-    // Syncs scroll  editor -> preview
-    var cScroll = false;
-    var pScroll = false;
-    cm.on('scroll', function (v) {
-        if (cScroll) {
-            cScroll = false;
-            return;
-        }
-        pScroll = true;
-        var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
-        var ratio = parseFloat(v.getScrollInfo().top) / height;
-        var move = (preview.scrollHeight - preview.clientHeight) * ratio;
-        preview.scrollTop = move;
-    });
+    this.func_e2p = this.getFuncE2P();
+    this.func_p2e = this.getFuncP2E();
 
-    // Syncs scroll  preview -> editor
-    preview.onscroll = function () {
-        if (pScroll) {
-            pScroll = false;
-            return;
-        }
-        cScroll = true;
-        var height = preview.scrollHeight - preview.clientHeight;
-        var ratio = parseFloat(preview.scrollTop) / height;
-        var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
-        cm.scrollTo(0, move);
-    };
+    if (this.options.syncSideBySidePreviewScroll) {
+       toggleSyncSideBySidePreviewScroll(this);
+    }
+
     return preview;
 };
 
@@ -1810,7 +1828,7 @@ InscrybMDE.prototype.createToolbar = function (items) {
                 var el = toolbarData[key];
                 if (stat[key]) {
                     el.className += ' active';
-                } else if (key != 'fullscreen' && key != 'side-by-side') {
+                } else if (key != 'fullscreen' && key != 'side-by-side' && key != 'sync-side-by-side') {
                     el.className = el.className.replace(/\s*active\s*/g, '');
                 }
             })(key);
@@ -1955,6 +1973,43 @@ InscrybMDE.prototype.value = function (val) {
     }
 };
 
+InscrybMDE.prototype.getFuncE2P = function(){
+    var editor = this;
+    // Syncs scroll  editor -> preview
+    return function (v) {
+        var cm = editor.codemirror;
+        var wrapper = cm.getWrapperElement();
+        var preview = wrapper.nextSibling;
+        if (editor.cScroll) {
+            editor.cScroll = false;
+            return;
+        }
+        editor.pScroll = true;
+        var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
+        var ratio = parseFloat(v.getScrollInfo().top) / height;
+        var move = (preview.scrollHeight - preview.clientHeight) * ratio;
+        preview.scrollTop = move;
+   };
+};
+
+InscrybMDE.prototype.getFuncP2E = function(){
+    var editor = this;
+    // Syncs scroll  preview -> editor
+    return function () {
+        var cm = editor.codemirror;
+        var wrapper = cm.getWrapperElement();
+        var preview = wrapper.nextSibling;
+        if (editor.pScroll) {
+            editor.pScroll = false;
+            return;
+        }
+        editor.cScroll = true;
+        var height = preview.scrollHeight - preview.clientHeight;
+        var ratio = parseFloat(preview.scrollTop) / height;
+        var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+        cm.scrollTo(0, move);
+    };
+};
 
 /**
  * Bind static methods for exports.
@@ -1980,6 +2035,7 @@ InscrybMDE.undo = undo;
 InscrybMDE.redo = redo;
 InscrybMDE.togglePreview = togglePreview;
 InscrybMDE.toggleSideBySide = toggleSideBySide;
+InscrybMDE.toggleSyncSideBySidePreviewScroll = toggleSyncSideBySidePreviewScroll;
 InscrybMDE.toggleFullScreen = toggleFullScreen;
 
 /**
@@ -2048,6 +2104,9 @@ InscrybMDE.prototype.togglePreview = function () {
 InscrybMDE.prototype.toggleSideBySide = function () {
     toggleSideBySide(this);
 };
+InscrybMDE.prototype.toggleSyncSideBySidePreviewScroll = function () {
+    toggleSyncSideBySidePreviewScroll(this);
+};
 InscrybMDE.prototype.toggleFullScreen = function () {
     toggleFullScreen(this);
 };
@@ -2066,6 +2125,10 @@ InscrybMDE.prototype.isSideBySideActive = function () {
     var preview = wrapper.nextSibling;
 
     return /editor-preview-active-side/.test(preview.className);
+};
+
+InscrybMDE.prototype.isSyncSideBySidePreviewScrollActive = function () {
+    return this.syncSideBySidePreviewScroll;
 };
 
 InscrybMDE.prototype.isFullscreenActive = function () {

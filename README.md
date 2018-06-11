@@ -212,6 +212,7 @@ table | drawTable | Insert Table<br>fa fa-table
 horizontal-rule | drawHorizontalRule | Insert Horizontal Line<br>fa fa-minus
 preview | togglePreview | Toggle Preview<br>fa fa-eye no-disable
 side-by-side | toggleSideBySide | Toggle Side by Side<br>fa fa-columns no-disable no-mobile
+sync-side-by-side | toggleSyncSideBySidePreviewScroll | Toggle Side by Side Preview Scroll Synchronization<br>fas fa-exchange-alt no-disable no-mobile
 fullscreen | toggleFullScreen | Toggle Fullscreen<br>fa fa-arrows-alt no-disable no-mobile
 guide | [This link](https://inscrybmde.com/markdown-guide) | Markdown Guide<br>fa fa-question-circle
 
@@ -264,6 +265,7 @@ Shortcut | Action
 *Cmd-Alt-L* | "toggleOrderedList"
 *Shift-Cmd-H* | "toggleHeadingBigger"
 *F9* | "toggleSideBySide"
+*Cmd-Alt-F9* | "toggleSyncSideBySidePreviewScroll"
 *F11* | "toggleFullScreen"
 
 Here is how you can change a few, while leaving others untouched:
