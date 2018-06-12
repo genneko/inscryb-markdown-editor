@@ -1262,7 +1262,7 @@ var toolbarBuiltInButtons = {
     'sync-side-by-side': {
         name: 'sync-side-by-side',
         action: toggleSyncSideBySidePreviewScroll,
-        className: 'fas fa-exchange-alt',
+        className: 'fa fa-exchange fa-exchange-alt',
         noDisable: true,
         noMobile: true,
         title: 'Toggle Side by Side Preview Scroll Synchronization',

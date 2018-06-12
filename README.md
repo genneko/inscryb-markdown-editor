@@ -212,7 +212,7 @@ table | drawTable | Insert Table<br>fa fa-table
 horizontal-rule | drawHorizontalRule | Insert Horizontal Line<br>fa fa-minus
 preview | togglePreview | Toggle Preview<br>fa fa-eye no-disable
 side-by-side | toggleSideBySide | Toggle Side by Side<br>fa fa-columns no-disable no-mobile
-sync-side-by-side | toggleSyncSideBySidePreviewScroll | Toggle Side by Side Preview Scroll Synchronization<br>fas fa-exchange-alt no-disable no-mobile
+sync-side-by-side | toggleSyncSideBySidePreviewScroll | Toggle Side by Side Preview Scroll Synchronization<br>fa fa-exchange fa-exchange-alt no-disable no-mobile
 fullscreen | toggleFullScreen | Toggle Fullscreen<br>fa fa-arrows-alt no-disable no-mobile
 guide | [This link](https://inscrybmde.com/markdown-guide) | Markdown Guide<br>fa fa-question-circle
 
